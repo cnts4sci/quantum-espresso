@@ -1,9 +1,9 @@
-FROM container4hpc/base-mpich314:0.2.0
+FROM container4hpc/base-mpich314:0.2.1
 
 RUN apt-get update \
 && apt-get install -y --no-install-recommends \
-        zlib1g-dev \
-        libopenblas-dev \
+        libblas-common \
+        libblas-dev \
 && rm -rf /var/lib/apt/lists/*
 
 # Install QE 6.8 (pw.x only for now)
@@ -13,6 +13,6 @@ RUN wget -q https://gitlab.com/QEF/q-e/-/archive/qe-6.8/q-e-qe-6.8.tar.gz \
 RUN cd q-e-qe-6.8 \
     && ./configure
 RUN cd q-e-qe-6.8 \
-    && make -j6 pw \
+    && make -j2 pw \
     && make install \
     && cd .. && rm -fr q-e-qe-*
