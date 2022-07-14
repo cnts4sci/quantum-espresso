@@ -1,4 +1,4 @@
-FROM container4hpc/base-mpich314:0.1.0
+FROM container4hpc/base-mpich314:0.2.0
 
 RUN apt-get update \
 && apt-get install -y --no-install-recommends \
