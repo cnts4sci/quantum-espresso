@@ -1,4 +1,4 @@
-FROM container4hpc/base-mpich314:0.2.0
+FROM containers4hpc/base-mpich314:0.1.0
 
 # Install QE 7.0 (pw.x only for now)
 # FOR PRODUCTION: PUT ALL IN THE SAME LINE TO AVOID HAVING LAYERS WITH A LOT OF FILES!
