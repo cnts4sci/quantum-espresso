@@ -1,0 +1,13 @@
+{
+    "variable": {
+        "BUILD_BASE_IMAGE": {
+            "default": "docker.io/containers4hpc/base-mpich314:0.1.0"
+        },
+        "RUNTIME_BASE_IMAGE": {
+            "default": "phusion/baseimage:focal-1.2.0"
+        },
+        "QE_VERSION": {
+            "default": "7.0"
+        }
+    }
+}
