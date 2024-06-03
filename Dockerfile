@@ -23,17 +23,12 @@ RUN wget -c -O qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-${QE_VERSION}/q
     tar xf qe.tar.gz -C qe --strip-components=1 && \
     cd qe && \
     LAPACK_LIBS=/usr/local/lapack/lib/liblapack.a BLAS_LIBS=/usr/local/lapack/lib/librefblas.a ./configure -enable-static && \
-    make -j8 pw ph && \
+    make -j8 all && \
     make install
 
 
 # Move binaries to a small image to reduce the size
 FROM runtime-base-image
-
-#RUN apt-get update && apt-get install -y \
-#    libquadmath0 \
-#  && rm -rf /var/lib/apt/lists/* \
-#  && apt-get clean all
 
 COPY --from=0 /usr/local/bin/* /usr/local/bin/
 
