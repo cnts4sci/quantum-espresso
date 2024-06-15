@@ -3,7 +3,7 @@ group "default" {
 }
 
 variable "ORGANIZATION" {
-    default = "containers4hpc"
+    default = "cnts4sci"
 }
 
 variable "BULID_BASE_IMAGE" {
