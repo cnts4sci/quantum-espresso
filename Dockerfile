@@ -1,21 +1,22 @@
-FROM build-base-image
+FROM openmpi-builder-image AS openmpi-builder
+FROM lapack-builder-image AS lapack-builder
+
+# As build-machine image, it is not actually a runtime
+# but I do the runtime multi-stage build to minimize the size
+# and for testing the integrity of the openmpi/lapack... static build and move
+FROM build-base-image AS qe-builder
 
 WORKDIR /qe-build
 
-# Compile Lapack
-# TODO: this should be moved to build-machine base image
-ARG LAPACK_VERSION="3.10.1"
+# Copy build toolchains from the builder stage
+COPY --from=openmpi-builder /opt/openmpi /opt/openmpi
+COPY --from=lapack-builder /usr/local/lapack /usr/local/lapack
 
-RUN wget -c -O lapack.tar.gz https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v${LAPACK_VERSION}.tar.gz && \
-    mkdir -p lapack && \
-    tar xf lapack.tar.gz -C lapack --strip-components=1 && \
-    cd lapack && \
-    cp INSTALL/make.inc.gfortran make.inc && \
-    make lapacklib blaslib && \
-    mkdir -p /usr/local/lapack/lib && \
-    cp *.a /usr/local/lapack/lib
+# Set up environment variables for OpenMPI
+ENV PATH="/opt/openmpi/bin:$PATH"
+ENV LD_LIBRARY_PATH="/opt/openmpi/lib:$LD_LIBRARY_PATH"
 
-# Compile QE
+# Compile QE (for test only)
 ARG QE_VERSION
 
 RUN wget -c -O qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-${QE_VERSION}/q-e-qe-${QE_VERSION}.tar.gz && \
@@ -23,12 +24,18 @@ RUN wget -c -O qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-${QE_VERSION}/q
     tar xf qe.tar.gz -C qe --strip-components=1 && \
     cd qe && \
     LAPACK_LIBS=/usr/local/lapack/lib/liblapack.a BLAS_LIBS=/usr/local/lapack/lib/librefblas.a ./configure -enable-static && \
-    make -j8 all && \
+    make -j8 pw && \
     make install
 
 
 # Move binaries to a small image to reduce the size
 FROM runtime-base-image
 
-COPY --from=0 /usr/local/bin/* /usr/local/bin/
+COPY --from=qe-builder /usr/local/bin/* /usr/local/bin/
 
+# Require OMPI to run
+COPY --from=openmpi-builder /opt/openmpi /opt/openmpi
+
+# Set up environment variables for OpenMPI
+ENV PATH="/opt/openmpi/bin:$PATH"
+ENV LD_LIBRARY_PATH="/opt/openmpi/lib:$LD_LIBRARY_PATH"

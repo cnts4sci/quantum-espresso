@@ -1,10 +1,16 @@
 {
     "variable": {
         "BUILD_BASE_IMAGE": {
-            "default": "docker.io/cnts4sci/base-mpich314:0.1.0"
+            "default": "ghcr.io/cnts4sci/bm:edge"
         },
         "RUNTIME_BASE_IMAGE": {
-            "default": "phusion/baseimage:focal-1.2.0"
+            "default": "docker.io/phusion/baseimage:focal-1.2.0"
+        },
+        "OPENMPI_BUILDER": {
+            "default": "ghcr.io/cnts4sci/bm-openmpi:edge"
+        },
+        "LAPACK_BUILDER": {
+            "default": "ghcr.io/cnts4sci/bm-lapack:edge"
         },
         "QE_VERSION": {
             "default": "7.0"
