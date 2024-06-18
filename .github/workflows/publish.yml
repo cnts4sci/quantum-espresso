@@ -1,0 +1,72 @@
+---
+name: Publish image to Docker container registries
+
+env:
+    # https://github.com/docker/metadata-action?tab=readme-ov-file#environment-variables
+    DOCKER_METADATA_PR_HEAD_SHA: true
+    REPO_NAME: ${GITHUB_REPOSITORY##*/}
+
+on:
+    workflow_call:
+        inputs:
+            runsOn:
+                description: GitHub Actions Runner image
+                required: true
+                type: string
+            image:
+                description: Image built in build step
+                required: true
+                type: string
+            registry:
+                description: Docker container registry
+                required: true
+                type: string
+
+jobs:
+
+    release:
+        runs-on: ${{ inputs.runsOn }}
+        timeout-minutes: 30
+        strategy:
+            fail-fast: true
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Login to GitHub Container Registry 🔑
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Read build variables
+              id: build_vars
+              run: |
+                  vars=$(cat build.json | jq -c '[.variable | to_entries[] | {"key": .key, "value": .value.default}] | from_entries')
+                  echo "vars=$vars" | tee -a "${GITHUB_OUTPUT}"
+
+            - name: Docker meta
+              id: meta
+              uses: docker/metadata-action@v5
+              env: ${{ fromJSON(steps.build_vars.outputs.vars) }}
+              with:
+                  # e.g. ghcr.io/cnts4sci/python
+                  images: ${{ inputs.registry }}/${{ github.repository_owner }}/${{ env.REPO_NAME }}
+                  tags: |
+                      type=edge,enable={{is_default_branch}}
+                      type=match,pattern=(\d{4}\.\d{4}(-.+)?),group=1
+                      type=raw,value=v${{ env.VERSION }},enable=${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+
+            - name: Determine source image
+              id: image
+              run: |
+                  src=$(echo '${{ inputs.image }}'| jq -cr '.[("${{ env.REPO_NAME }}"|ascii_upcase|sub("-"; "_"; "g")) + "_IMAGE"]')
+                  echo "src=$src" | tee -a "${GITHUB_OUTPUT}"
+
+            - name: Push image
+              uses: akhilerm/tag-push-action@v2.2.0
+              with:
+                  src: ${{ steps.image.outputs.src }}
+                  dst: ${{ steps.meta.outputs.tags }}
+

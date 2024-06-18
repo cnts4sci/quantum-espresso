@@ -6,19 +6,7 @@ variable "ORGANIZATION" {
     default = "cnts4sci"
 }
 
-variable "BULID_BASE_IMAGE" {
-}
-
-variable "RUNTIME_BASE_IMAGE" {
-}
-
-variable "OPENMPI_BUILDER" {
-}
-
-variable "LAPACK_BUILDER" {
-}
-
-variable "QE_VERSION" {
+variable "VERSION" {
 }
 
 variable "REGISTRY" {
@@ -40,13 +28,13 @@ target "qe" {
     inherits = ["qe-meta"]
     context = "."
     contexts = {
-        build-base-image = "docker-image://${BUILD_BASE_IMAGE}"
-        runtime-base-image = "docker-image://${RUNTIME_BASE_IMAGE}"
-        openmpi-builder-image = "docker-image://${OPENMPI_BUILDER}"
-        lapack-builder-image = "docker-image://${LAPACK_BUILDER}"
+        build-base-image = "docker-image://ghcr.io/cnts4sci/bm:2024.1001"
+        runtime-base-image = "docker-image://docker.io/phusion/baseimage:focal-1.2.0"
+        openmpi-builder-image = "docker-image://ghcr.io/cnts4sci/bm-openmpi:v4.1.6"
+        lapack-builder-image = "docker-image://ghcr.io/cnts4sci/bm-lapack:v3.10.1"
     }
     args = {
-      "QE_VERSION" = "${QE_VERSION}"
+      "QE_VERSION" = "${VERSION}"
     }
 }
 

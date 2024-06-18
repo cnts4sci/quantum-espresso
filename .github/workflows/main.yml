@@ -1,0 +1,94 @@
+---
+name: Docker
+
+on:
+    pull_request:
+        paths-ignore:
+            - "**.md"
+            - ruff.toml
+            - bumpver.toml
+            - .pre-commit-config.yaml
+    push:
+        branches:
+            - main
+        tags:
+            - "v*"
+    workflow_dispatch:
+
+# https://docs.github.com/en/actions/using-jobs/using-concurrency
+concurrency:
+    # only cancel in-progress jobs or runs for the current workflow - matches against branch & tags
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    FORCE_COLOR: 1
+
+jobs:
+
+    build-amd64:
+        uses: ./.github/workflows/build.yml
+        with:
+            runsOn: ubuntu-22.04
+            platforms: linux/amd64
+
+    test-amd64:
+        needs: build-amd64
+        strategy:
+            fail-fast: false
+        uses: ./.github/workflows/test.yml
+        with:
+            runsOn: ubuntu-22.04
+            image: ${{ needs.build-amd64.outputs.image }}
+            integration: false
+
+    build:
+        needs: test-amd64
+        uses: ./.github/workflows/build.yml
+        with:
+            runsOn: ubuntu-22.04
+            platforms: linux/amd64,linux/arm64
+
+    # To save arm64 runner resources, we run the tests only on main
+    # and only for full-stack image (same for integration tests below).
+    test-arm64:
+        if: >-
+            github.repository == 'cnts4sci/build-machine'
+            && (github.ref_type == 'tag' || github.ref_name == 'main')
+        needs: build
+        uses: ./.github/workflows/test.yml
+        with:
+            runsOn: buildjet-4vcpu-ubuntu-2204-arm
+            image: ${{ needs.build.outputs.image }}
+            integration: false
+
+    test-integration:
+        name: Integration tests
+        needs: build
+        strategy:
+            fail-fast: false
+            # Trick to exclude arm64 tests from PRs
+            # https://github.com/orgs/community/discussions/26253
+            matrix:
+                runner: [ubuntu-22.04, buildjet-4vcpu-ubuntu-2204-arm]
+                isPR:
+                    - ${{ github.event_name == 'pull_request' }}
+                exclude:
+                    - isPR: true
+                      runner: buildjet-4vcpu-ubuntu-2204-arm
+
+        uses: ./.github/workflows/test.yml
+        with:
+            runsOn: ${{ matrix.runner }}
+            image: ${{ needs.build.outputs.image }}
+            integration: true
+
+    publish-ghcr:
+        needs: [build, test-amd64]
+        uses: ./.github/workflows/publish.yml
+        with:
+            runsOn: ubuntu-22.04
+            image: ${{ needs.build.outputs.image }}
+            registry: ghcr.io
+        secrets: inherit
+
