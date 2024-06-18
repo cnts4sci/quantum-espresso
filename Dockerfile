@@ -24,7 +24,7 @@ RUN wget -c -O qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-${QE_VERSION}/q
     tar xf qe.tar.gz -C qe --strip-components=1 && \
     cd qe && \
     LAPACK_LIBS=/usr/local/lapack/lib/liblapack.a BLAS_LIBS=/usr/local/lapack/lib/librefblas.a ./configure -enable-static && \
-    make -j8 pw && \
+    make -j8 all && \
     make install
 
 
