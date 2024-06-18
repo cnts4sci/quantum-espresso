@@ -5,24 +5,24 @@
 # The input to this script is a JSON string passed via BAKE_METADATA env variable
 # Here's example input (trimmed to relevant bits):
 # BAKE_METADATA: {
-#    "base": {
+#    "python": {
 #      "containerimage.descriptor": {
 #        "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
 #        "digest": "sha256:8e57a52b924b67567314b8ed3c968859cad99ea13521e60bbef40457e16f391d",
 #        "size": 6170,
 #      },
 #      "containerimage.digest": "sha256:8e57a52b924b67567314b8ed3c968859cad99ea13521e60bbef40457e16f391d",
-#      "image.name": "ghcr.io/pspgen/quantum-espresso"
+#      "image.name": "ghcr.io/cnts4sci/python"
 #    }
 #  }
 #
 # Example output (real output is on one line):
 #
-# image="ghcr.io/pspgen/quantum-espresso@sha256:79a0f984b9e03b733304fda809ad3e8eec8416992ff334052d75da00cadb8f12"
+# image="ghcr.io/cnts4sci/python@sha256:79a0f984b9e03b733304fda809ad3e8eec8416992ff334052d75da00cadb8f12"
 # }
 #
 # This json output is later turned to environment variables using fromJson() GHA builtin
-# (e.g. BUILD_MACHINE_IMAGE=ghcr.io/pspgen/quantum-espresso@sha256:8e57a52b...)
+# (e.g. BUILD_MACHINE_IMAGE=ghcr.io/cnts4sci/python@sha256:8e57a52b...)
 # and these are in turn read in the docker-compose.<target>.yml files for tests.
 
 if [[ -z ${BAKE_METADATA-} ]];then
